@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+model_weights/
+outputs/
+*.safetensors
+*.bin
+*.pt
+.env
+dataset/
+*.jsonl
+wandb/
