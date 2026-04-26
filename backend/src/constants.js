@@ -1,0 +1,1 @@
+export const DB_NAME = "Secure_AI_Consultation_platform"
