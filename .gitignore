@@ -130,7 +130,8 @@ bower_components
 __pycache__/
 *.pyc
 
-
+ai-service/model/
+*.safetensors
 
 *.sublime*
 
