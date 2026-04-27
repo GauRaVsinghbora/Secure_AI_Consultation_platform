@@ -61,7 +61,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
     let aiReply;
     let doctors = [];   // ✅ moved outside
-    const specialist = "doctor"; // temp hardcode
+    const specialist = "neurologist"; // temp hardcode
 
     try {
 

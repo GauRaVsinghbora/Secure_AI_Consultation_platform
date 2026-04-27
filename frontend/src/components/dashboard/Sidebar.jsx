@@ -44,7 +44,7 @@ function Sidebar() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col h-full min-h-0">
 
       {/* New Chat */}
       <button

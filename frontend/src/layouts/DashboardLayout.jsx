@@ -3,34 +3,61 @@ import { Header, Sidebar } from "../components";
 import { useState } from "react";
 
 function DashboardLayout() {
-
   const [authPopup, setAuthPopup] = useState({
     open: false,
     type: "login"
   });
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen flex flex-col bg-[#000] text-white">
+    <div className="h-screen flex flex-col bg-black text-white overflow-hidden">
 
-      {/* Header */}
-      <Header setAuthPopup={setAuthPopup} />
+      {/*  HEADER (ALWAYS VISIBLE) */}
+      <Header 
+        setAuthPopup={setAuthPopup} 
+        toggleSidebar={() => setIsSidebarOpen(true)} 
+      />
 
-      {/* Body */}
+      {/* BODY */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Sidebar */}
-        <div className="w-64 border-r border-gray-800 p-4 flex flex-col">
+        {/* desktop Sidebar */}
+        <div className="hidden md:flex border-r border-white/10 p-4">
           <Sidebar />
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 p-6 overflow-auto">
+        {/*  Mobile Menu Button (inside content area, NOT header) */}
+        <button
+          className="md:hidden fixed top-20 left-4 z-40 bg-white/10 px-3 py-2 rounded-lg"
+          onClick={() => setIsSidebarOpen(true)}
+        >
+          ☰
+        </button>
+
+        {/*  Mobile Sidebar Fullscreen */}
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 bg-black flex flex-col">
+
+            {/* Top bar */}
+            <div className="flex justify-between items-center p-4 border-b border-white/10">
+              <h2 className="text-lg">Menu</h2>
+              <button onClick={() => setIsSidebarOpen(false)}>✕</button>
+            </div>
+
+            {/* Sidebar content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <Sidebar closeSidebar={() => setIsSidebarOpen(false)} />
+            </div>
+          </div>
+        )}
+
+        {/*  Main Content */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </div>
 
       </div>
-
     </div>
   );
 }

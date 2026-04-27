@@ -95,7 +95,7 @@ return (
   <div className="flex flex-col h-full text-white">
 
     {/* Messages area */}
-    <div ref={scrollRef} onScroll={handleScroll} className={`flex-1 overflow-y-auto overflow-x-hidden p-6 ${messages?.length === 0 ? "flex flex-col items-center justify-center" : ""} scrollbar-thin ${
+    <div ref={scrollRef} onScroll={handleScroll} className={`flex-1 overflow-y-auto overflow-x-hidden ${messages?.length === 0 ? "flex flex-col items-center justify-center" : ""} scrollbar-thin ${
         scrolling ? "scroll-active" : ""
       }`}>
 

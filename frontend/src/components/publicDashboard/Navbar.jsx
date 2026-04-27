@@ -80,7 +80,7 @@ export default function Header({ setAuthPopup }) {
         <header className={`sticky z-50 top-0 ${scrolled
           ? "bg-white/0 shadow-md backdrop-blur-md"
           : "bg-transparent backdrop-blur-sm"} transition-all duration-300`}>
-            <nav className="border-gray-200 px-4 lg:px-6 py-2.5">
+            <nav className=" border-gray-200 px-3 sm:px-4 lg:px-6 py-2.5">
                 <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
                     <Link to="/" className="flex items-center">
                         <img
@@ -133,10 +133,10 @@ export default function Header({ setAuthPopup }) {
                         ))}
                     </div>
                     <div
-                        className="hidden justify-between items-center w-full lg:flex lg:w-auto lg:order-1"
+                        className=" justify-between items-center w-full lg:flex lg:w-auto lg:order-1"
                         id="mobile-menu-2"
                     >
-                        <ul className="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
+                        <ul className="flex flex-row justify-center mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
                             {
                                 navItems.map((item)=>(
                                     item.active ? (
