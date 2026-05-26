@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-
     session: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "ChatSession"
@@ -12,9 +11,23 @@ const messageSchema = new mongoose.Schema({
         enum: ["user", "assistant"]
     },
 
-    content: {
+    content: String,
+
+    specialist: {
         type: String
-    }
+    },
+
+    doctors: [
+        {
+            name: String,
+            address: String,
+            rating: Number,
+            location: {
+                lat: Number,
+                lng: Number
+            }
+        }
+    ]
 
 }, { timestamps: true });
 

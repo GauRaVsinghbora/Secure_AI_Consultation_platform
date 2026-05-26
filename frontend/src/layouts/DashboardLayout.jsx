@@ -1,13 +1,14 @@
 import { Outlet } from "react-router-dom";
 import { Header, Sidebar } from "../components";
 import { useState } from "react";
+import ProfilePopup from "../components/ProfilePopup";
 
 function DashboardLayout() {
   const [authPopup, setAuthPopup] = useState({
     open: false,
     type: "login"
   });
-
+  const [profilePopup, setProfilePopup] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -24,7 +25,10 @@ function DashboardLayout() {
 
         {/* desktop Sidebar */}
         <div className="hidden md:flex border-r border-white/10 p-4">
-          <Sidebar />
+          <Sidebar 
+  openProfile={() => setProfilePopup(true)}
+  closeSidebar={() => setIsSidebarOpen(false)} 
+/>
         </div>
 
         {/*  Mobile Menu Button (inside content area, NOT header) */}
@@ -56,7 +60,13 @@ function DashboardLayout() {
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </div>
-
+        <ProfilePopup
+  open={profilePopup}
+  onClose={() => setProfilePopup(false)}
+  user={JSON.parse(localStorage.getItem("userData")).user.username}
+  email={JSON.parse(localStorage.getItem("userData")).user.email}
+  totalChats={0} // we’ll improve later
+/>
       </div>
     </div>
   );

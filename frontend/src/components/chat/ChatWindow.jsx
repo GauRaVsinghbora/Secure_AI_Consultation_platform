@@ -1,23 +1,32 @@
-import { useState,useRef, useEffect  } from "react";
+import { useState, useRef, useEffect } from "react";
 import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
-import { createChat, sendMessage,updateChatTitle } from "../../api/chatApi";
+import { createChat, sendMessage, updateChatTitle } from "../../api/chatApi";
 
-function ChatWindow({ sessionId,messages=[], setMessages }) {
-
+function ChatWindow({ sessionId, messages = [], setMessages }) {
 
   const bottomRef = useRef(null);
+  const scrollRef = useRef(null);
+  const timeoutRef = useRef(null);
+
   const userData = localStorage.getItem("userData");
   const user = JSON.parse(userData)?.user?.username || "Guest";
-  const [aiTyping, setAiTyping] = useState(false);
 
-  const scrollRef = useRef(null);
+  const [aiTyping, setAiTyping] = useState(false);
   const [scrolling, setScrolling] = useState(false);
-  const timeoutRef = useRef(null);
+  const [inputValue, setInputValue] = useState("");
+
+  // ✅ HARD-CODED TOP SEARCHES
+  const TOP_SEARCHES = [
+    "I have fever",
+    "Headache and body pain",
+    "Symptoms of malaria",
+    "Cold and cough treatment",
+    "Stomach pain causes"
+  ];
 
   const handleScroll = () => {
     setScrolling(true);
-
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setScrolling(false);
@@ -25,24 +34,23 @@ function ChatWindow({ sessionId,messages=[], setMessages }) {
   };
 
   const getLocation = () =>
-  new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      }),
-      reject
-    );
-  });
+    new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) =>
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          }),
+        reject
+      );
+    });
 
   useEffect(() => {
-  bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
 
   const handleSend = async (text) => {
     try {
-
       let currentSessionId = sessionId;
       let isNewSession = false;
 
@@ -60,12 +68,14 @@ function ChatWindow({ sessionId,messages=[], setMessages }) {
       setMessages((prev = []) => [...prev, userMessage]);
       setAiTyping(true);
 
-      // 🔹 update title using first message
+      // update title
       if (isNewSession) {
-        const title = text.slice(0, 40); // first 40 chars
+        const title = text.slice(0, 40);
         await updateChatTitle(currentSessionId, title);
       }
+
       const location = await getLocation();
+
       const res = await sendMessage({
         sessionId: currentSessionId,
         content: text,
@@ -87,78 +97,93 @@ function ChatWindow({ sessionId,messages=[], setMessages }) {
       console.error("AI error:", error);
     } finally {
       setAiTyping(false);
+      setInputValue(""); // clear input after send
     }
   };
 
+  return (
+    <div className="flex flex-col h-full text-white">
 
-return (
-  <div className="flex flex-col h-full text-white">
+      {/* Messages area */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className={`flex-1 overflow-y-auto overflow-x-hidden ${
+          messages?.length === 0
+            ? "flex flex-col items-center justify-center"
+            : ""
+        } scrollbar-thin ${scrolling ? "scroll-active" : ""}`}
+      >
 
-    {/* Messages area */}
-    <div ref={scrollRef} onScroll={handleScroll} className={`flex-1 overflow-y-auto overflow-x-hidden ${messages?.length === 0 ? "flex flex-col items-center justify-center" : ""} scrollbar-thin ${
-        scrolling ? "scroll-active" : ""
-      }`}>
+        {/* 🟢 EMPTY STATE */}
+        {messages.length === 0 && (
+          <>
+            <div className="mb-6 text-center">
+              <h2 className="text-[20px] text-gray-400">
+                Hi! {user}
+              </h2>
 
-      {messages.length === 0 && (
-        <>
-          <div className="mb-6 text-center">
-            <h2 className="text-[20px] text-gray-400">
-              Hi! {user}
-            </h2>
-
-            <h1 className="text-[30px] mb-3">
-              What's on the agenda today?
-            </h1>
-          </div>
-
-          <ChatInput onSend={handleSend} />
-
-          <p className="text-gray-400 text-left mt-10">top searches</p>
-
-          <div className="flex flex-wrap items-start gap-3 mt-2">
-            <div className="max-w-md rounded-[50px] px-5 py-2 border text-gray-600 border-gray-900 hover:border-white hover:text-white cursor-pointer">
-              <h3>I have fever</h3>
+              <h1 className="text-[30px] mb-3">
+                What's on the agenda today?
+              </h1>
             </div>
 
-            <div className="max-w-md rounded-[50px] px-5 py-2 border text-gray-600 border-gray-900 hover:border-white hover:text-white cursor-pointer">
-              <h3>what is the symptom of malaria?</h3>
-            </div>
+            {/* ✅ INPUT */}
+            <ChatInput
+              onSend={handleSend}
+              value={inputValue}
+              setValue={setInputValue}
+            />
 
-            <div className="max-w-md rounded-[50px] px-5 py-2 border text-gray-600 border-gray-900 hover:border-white hover:text-white cursor-pointer">
-              <h3>what is malaria?</h3>
+            {/* ✅ TOP SEARCHES */}
+            <p className="text-gray-400 text-left mt-15 mb-4"> Recommended searches</p>
+
+            <div className="flex flex-wrap items-start gap-3 mt-2">
+              {TOP_SEARCHES.map((item, index) => (
+                <div
+                  key={index}
+                  onClick={() => setInputValue(item)}
+                  className="max-w-md rounded-[50px] px-5 py-2 border text-gray-600 border-gray-900 hover:border-white hover:text-white cursor-pointer transition"
+                >
+                  <h3>{item}</h3>
+                </div>
+              ))}
             </div>
-          </div>
-        </>
+          </>
+        )}
+
+        {/* 💬 CHAT MESSAGES */}
+        {messages?.map((msg, index) => (
+          <MessageBubble
+            key={index}
+            role={msg.role}
+            content={msg.content}
+            specialist={msg.specialist}
+            doctors={msg.doctors}
+          />
+        ))}
+
+        {/* 🤖 AI typing */}
+        {aiTyping && (
+          <MessageBubble role="assistant" content="..." />
+        )}
+
+        <div ref={bottomRef}></div>
+      </div>
+
+      {/* 🔽 BOTTOM INPUT */}
+      {messages.length > 0 && (
+        <div className="flex justify-center p-4">
+          <ChatInput
+            onSend={handleSend}
+            value={inputValue}
+            setValue={setInputValue}
+          />
+        </div>
       )}
 
-      {/* Chat messages */}
-      {messages?.map((msg, index) => (
-        <MessageBubble
-          key={index}
-          role={msg.role}
-          content={msg.content}
-          doctors={msg.doctors}
-        />
-      ))}
-
-      {/* AI typing indicator */}
-    {aiTyping && (
-      <MessageBubble role="assistant" content="..." />
-    )}
-
-      <div ref={bottomRef}></div>
-
     </div>
-
-    {/* Bottom input (only when chat started) */}
-    {messages.length > 0 && (
-      <div className="flex justify-center  p-4">
-        <ChatInput onSend={handleSend} />
-      </div>
-    )}
-
-  </div>
-);
+  );
 }
 
 export default ChatWindow;

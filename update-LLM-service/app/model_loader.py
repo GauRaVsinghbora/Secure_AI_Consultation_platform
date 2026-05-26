@@ -11,14 +11,18 @@ model_loaded = False
 def load_model():
     global model, tokenizer, model_loaded
 
+    print("Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(ADAPTER_PATH)
+
+    print("Loading base model (Mistral)...")
 
     base_model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
-        torch_dtype=torch.float32
+        device_map="auto",
+        load_in_4bit=True
     )
 
-    base_model.resize_token_embeddings(len(tokenizer))
+    print("Loading LoRA adapter...")
 
     model = PeftModel.from_pretrained(
         base_model,
@@ -27,4 +31,5 @@ def load_model():
 
     model.eval()
 
-    model_loaded = True 
+    model_loaded = True
+    print("Model loaded successfully!")

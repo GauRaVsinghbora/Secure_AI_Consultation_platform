@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getUserChats, createChat } from "../../api/chatApi";
 
-function Sidebar() {
+function Sidebar({openProfile}) {
 
   const [sessions, setSessions] = useState([]);
   const navigate = useNavigate();
@@ -77,7 +77,8 @@ function Sidebar() {
 
       {/* Profile (Fixed Bottom) */}
       <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center space-x-3 cursor-pointer">
+        <div className="flex items-center space-x-3 cursor-pointer"
+        onClick ={openProfile}>
           <div className="w-8 h-8 rounded-full bg-gray-500">
             <img
               src={`https://ui-avatars.com/api/?name=${user}&background=random&color=fff&size=64`}

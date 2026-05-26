@@ -13,10 +13,13 @@ function AuthModal({ onClose }) {
 
       const token = credentialResponse.credential;
       const res = await googleLogin(token);
+      console.log("Login successful:", res);
+
 
       dispatch(login(res.data));
 
       // store user data in localStorage
+      localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("userData", JSON.stringify(res.data));
 
       onClose();

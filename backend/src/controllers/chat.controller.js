@@ -3,25 +3,59 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ChatSession } from "../models/chatSession.model.js";
 import { Message } from "../models/message.model.js";
+import { Search } from "../models/topSearch.model.js";
+import { normalizeQuery } from "../utils/normalizeQuery.js";
 import axios from "axios";
 
 
 // fetch doctor
 export const getDoctors = async (specialist, lat, lng) => {
   try {
-    const response = await axios.get(
+    const radiuses = [5000, 10000, 20000, 50000];
+
+    for (const radius of radiuses) {
+      console.log(`Searching ${specialist} in radius ${radius}`);
+
+      const response = await axios.get(
+        "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
+        {
+          params: {
+            location: `${lat},${lng}`,
+            radius,
+            keyword: `${specialist} doctor`,
+            type: "doctor",
+            key: process.env.GOOGLE_API_KEY
+          }
+        }
+      );
+
+      if (response.data.results.length) {
+        console.log(`Found doctors in radius ${radius}`);
+        return response.data.results.slice(0, 5).map(place => ({
+          name: place.name,
+          rating: place.rating,
+          address: place.vicinity
+        }));
+      }
+    }
+
+    // ✅ FINAL fallback
+    console.log("Fallback to general doctors");
+
+    const fallback = await axios.get(
       "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
       {
         params: {
           location: `${lat},${lng}`,
-          radius: 5000,
-          keyword: specialist,
+          radius: 50000,
+          keyword: "doctor",
+          type: "doctor",
           key: process.env.GOOGLE_API_KEY
         }
       }
     );
 
-    return response.data.results.slice(0, 5).map(place => ({
+    return fallback.data.results.slice(0, 5).map(place => ({
       name: place.name,
       rating: place.rating,
       address: place.vicinity
@@ -41,7 +75,19 @@ export const sendMessage = asyncHandler(async (req, res) => {
     if (!sessionId || !content) {
         throw new ApiError(400, "Session ID and message required");
     }
+
     console.log("Received message:", content, "Location:", location);
+
+    // ✅ STEP 1: Normalize & store search
+    const normalizedQuery = normalizeQuery(content);
+
+    await Search.findOneAndUpdate(
+        { query: normalizedQuery },
+        { $inc: { count: 1 } },
+        { upsert: true, new: true }
+    );
+
+    // ----------------------------------------
 
     const session = await ChatSession.findOne({
         _id: sessionId,
@@ -60,8 +106,8 @@ export const sendMessage = asyncHandler(async (req, res) => {
     });
 
     let aiReply;
-    let doctors = [];   // ✅ moved outside
-    const specialist = "neurologist"; // temp hardcode
+    let doctors = [];
+    let specialist;
 
     try {
 
@@ -71,15 +117,19 @@ export const sendMessage = asyncHandler(async (req, res) => {
         );
 
         aiReply = aiResponse.data?.response;
+        specialist = aiResponse.data?.specialist;
+
+        console.log("AI response:", aiReply, "Specialist:", specialist);
 
         if (!aiReply) {
             throw new Error("Invalid AI response");
         }
 
-        // ✅ fetch doctors
+        // fetch doctors
         if (specialist && location) {
             const { lat, lng } = location;
             doctors = await getDoctors(specialist, lat, lng);
+            console.log("Fetched doctors:", doctors);
         }
 
     } catch (error) {
@@ -87,11 +137,13 @@ export const sendMessage = asyncHandler(async (req, res) => {
         throw new ApiError(500, "AI service failed");
     }
 
-    // save AI message
+    // save AI message (with doctors)
     const aiMessage = await Message.create({
         session: sessionId,
         role: "assistant",
-        content: aiReply
+        content: aiReply,
+        specialist,
+        doctors
     });
 
     // update session timestamp
@@ -99,24 +151,16 @@ export const sendMessage = asyncHandler(async (req, res) => {
         updatedAt: new Date()
     });
 
-    // ✅ attach doctors INSIDE aiMessage
-    const responseMessage = {
-        ...aiMessage.toObject(),
-        doctors,
-        specialist
-    };
-
     return res.status(200).json(
         new ApiResponse(
             200,
             {
                 userMessage,
-                aiMessage: responseMessage   // ✅ IMPORTANT FIX
+                aiMessage   // ✅ no need for manual override now
             },
             "AI response generated"
         )
     );
-
 });
 
 // create new chat
@@ -222,4 +266,60 @@ export const deleteChatSession = asyncHandler(async (req, res) => {
         )
     );
 
+});
+
+//get top serches with normalization
+export const getTopSearches = asyncHandler(async (req, res) => {
+
+    const topSearches = await Search.find()
+        .sort({ count: -1 })   // highest first
+        .limit(10);
+
+    return res.status(200).json(
+        new ApiResponse(200, topSearches, "Top searches fetched")
+    );
+});
+
+export const searchChats = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { keyword } = req.query;
+
+  if (!keyword) {
+    throw new ApiError(400, "Keyword required");
+  }
+
+  // find sessions of user
+  const sessions = await ChatSession.find({ user: userId });
+
+  const sessionIds = sessions.map(s => s._id);
+
+  // search messages
+  const messages = await Message.find({
+    session: { $in: sessionIds },
+    content: { $regex: keyword, $options: "i" }
+  }).populate("session");
+
+  return res.status(200).json(
+    new ApiResponse(200, messages, "Search results")
+  );
+});
+
+export const getUserStats = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const totalChats = await ChatSession.countDocuments({ user: userId });
+
+  const sessions = await ChatSession.find({ user: userId });
+  const sessionIds = sessions.map(s => s._id);
+
+  const totalMessages = await Message.countDocuments({
+    session: { $in: sessionIds }
+  });
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      totalChats,
+      totalMessages
+    }, "User stats fetched")
+  );
 });

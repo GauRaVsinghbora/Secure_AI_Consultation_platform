@@ -2,9 +2,10 @@ import DoctorList from "./DoctorList";
 import { FaNotesMedical } from "react-icons/fa";
 
 
-function MessageBubble({ role, content, doctors }) {
+function MessageBubble({ role, content, specialist, doctors }) {
   const isUser = role === "user";
   const isTyping = content === "...";
+
 
   return (
     <div
@@ -67,7 +68,11 @@ function MessageBubble({ role, content, doctors }) {
             <FaNotesMedical className="text-lg sm:text-xl md:text-2xl mt-1" />
 
             <span className="leading-snug">
-              Nearby doctors you can consult based on your location
+              Based on your symptoms you have to consult a{" "}
+              <span className="bg-green-500/20 text-white px-2 py-0.5 rounded-md font-semibold">
+                {specialist}
+              </span>{" "}
+              specialist, you may consider consulting these doctors:
             </span>
           </div>
 

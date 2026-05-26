@@ -138,5 +138,10 @@ ai-service/model/
 psd
 thumb
 sketch
+ai-service/
 
-# End of https://mrkandreev.name/snippets/gitignore-generator/#Node,react
+
+# End of https://mrkandreev.name/snippets/gitignore-generator/#Node,reactupdate-LLM-service/venv/
+ai-service/model/tinyllama-medical-10k/
+*.safetensors
+client_secret*.json
