@@ -2,7 +2,7 @@
 
 A secure AI-powered healthcare consultation platform that assists users by analyzing symptoms, suggesting possible medications, and recommending relevant medical specialists. The platform combines AI-driven healthcare assistance with authentication, role-based access, and a responsive modern interface.
 
-## Overview
+##Overview
 
 The Secure AI Consultation Platform is designed to provide users with a smarter and more accessible healthcare support experience. The system allows patients to interact with an AI consultation assistant that helps identify possible health conditions based on symptoms and recommends the appropriate specialist.
 
