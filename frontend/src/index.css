@@ -1,0 +1,71 @@
+@import "tailwindcss";
+/* Add this to your global CSS file (e.g., index.css or App.css) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@layer utilities {
+  @keyframes gradient {
+    0%, 100% {
+      background-size: 200% 200%;
+      background-position: left center;
+    }
+    50% {
+      background-size: 200% 200%;
+      background-position: right center;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translateY(-10px) scale(1.2);
+      opacity: 1;
+    }
+  }
+
+  .animate-gradient {
+    animation: gradient 3s ease infinite;
+  }
+
+  .animate-float {
+    animation: float 2s ease-in-out infinite;
+  }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+/* Custom scrollbar */
+  /* scrollbar width */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  /* track */
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* default state */
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.096);
+    border-radius: 20px;
+    transition: background-color 0.35s ease, opacity 0.35s ease;
+  }
+
+  /* active scrolling */
+  .scroll-active::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
